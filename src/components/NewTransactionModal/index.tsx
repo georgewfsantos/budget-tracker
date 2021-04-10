@@ -1,15 +1,14 @@
+import { FormEvent, useState } from "react";
 import Modal from "react-modal";
 import closeButtonImage from "../../assets/close.svg";
-import incomeImage from "../../assets/income.svg";
 import expenditureImage from "../../assets/expenditure.svg";
-
+import incomeImage from "../../assets/income.svg";
+import { useTransactions } from "../../hooks/useTransactions";
 import {
   Container,
-  TransactionTypeContainer,
   TransactionTypeButton,
+  TransactionTypeContainer,
 } from "./styles";
-import { FormEvent, useState } from "react";
-import { api } from "../../services/api";
 
 interface NewTransactionModalProps {
   isOpen: boolean;
@@ -20,22 +19,29 @@ export const NewTransactionModal = ({
   isOpen,
   onRequestClose,
 }: NewTransactionModalProps) => {
-  const [transactionType, setTransactionType] = useState("");
+  const { createNewTransaction } = useTransactions();
+
+  const [type, setType] = useState("deposit");
   const [title, setTitle] = useState("");
-  const [transactionValue, setTransactionValue] = useState(0);
+  const [amount, setAmount] = useState(0);
   const [category, setCategory] = useState("");
 
-  const handleCreateNewTransaction = (event: FormEvent<HTMLFormElement>) => {
+  const handleCreateNewTransaction = async (
+    event: FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault();
-
-    const data = {
+    await createNewTransaction({
       title,
-      transactionType,
-      transactionValue,
+      type,
       category,
-    };
+      amount,
+    });
 
-    api.post("/transactions", data);
+    setType("deposit");
+    setTitle("");
+    setAmount(0);
+    setCategory("");
+    onRequestClose();
   };
 
   return (
@@ -65,8 +71,8 @@ export const NewTransactionModal = ({
         <TransactionTypeContainer>
           <TransactionTypeButton
             type="button"
-            onClick={() => setTransactionType("deposit")}
-            isActive={transactionType === "deposit"}
+            onClick={() => setType("deposit")}
+            isActive={type === "deposit"}
             activeColor="green"
           >
             <img src={incomeImage} alt="Income" />
@@ -75,8 +81,8 @@ export const NewTransactionModal = ({
 
           <TransactionTypeButton
             type="button"
-            onClick={() => setTransactionType("withdrawal")}
-            isActive={transactionType === "withdrawal"}
+            onClick={() => setType("withdrawal")}
+            isActive={type === "withdrawal"}
             activeColor="red"
           >
             <img src={expenditureImage} alt="Outcome" />
@@ -87,8 +93,8 @@ export const NewTransactionModal = ({
         <input
           type="number"
           placeholder="Valor"
-          value={transactionValue}
-          onChange={(event) => setTransactionValue(Number(event.target.value))}
+          value={amount}
+          onChange={(event) => setAmount(Number(event.target.value))}
         />
 
         <input
